@@ -5,8 +5,8 @@ class fifo #(parameter drvrs = 4, parameter pckg_sz = 16);
     bit pndng_monitor;
     bit [pckg_sz-1:0] data_out_monitor;
     bit [pckg_sz-1:0] data_out_bus;
-    bit [pckg_sz-1:0] queue_in [$:drvrs];
-    bit [pckg_sz-1:0] queue_out [$:drvrs];
+    bit [pckg_sz-1:0] queue_in [$];
+    bit [pckg_sz-1:0] queue_out [$];
     bit id;
     
     
@@ -51,16 +51,29 @@ class fifo #(parameter drvrs = 4, parameter pckg_sz = 16);
     endfunction
     
     function print(input string tag);
-        $display("[%g] %s push=%b, pop=%b, pending=%b, data_out=%h, queue=%p, id=%d, size=%d",
-            $time,
-            tag,
-            this.push,
-            this.pop,
-            this.pndng,
-            this.data_out,
-            this.queue,
-            this.id,
-            this.queue.size());
+        $display("[TIME %g]", $time);
+        $display("%s", tag);
+        $display("push=%b", this.push);
+        $display("pop=%b", this.pop);
+        $display("pndng_bus=%b", this.pndng_bus);
+        $display("pndng_monitor=%b", this.pndng_monitor);
+        $display("data_out_bus=%h", this.data_out_bus);
+        $display("data_out_monitor=%h", this.data_out_monitor);
+        $display("queue_in=%p", this.queue_in);
+        $display("queue_out=%p", this.queue_out);
+        $display("id=%d", this.id);
+        
+        
+//        $display("[%g] %s push=%b, pop=%b, pending=%b, data_out=%h, queue=%p, id=%d, size=%d",
+//            $time,
+//            tag,
+//            this.push,
+//            this.pop,
+//            this.pndng,
+//            this.data_out,
+//            this.queue,
+//            this.id,
+//            this.queue.size());
     endfunction
         
 endclass
