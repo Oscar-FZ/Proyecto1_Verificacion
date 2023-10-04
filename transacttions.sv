@@ -38,8 +38,7 @@ class fifo #(parameter drvrs = 4, parameter pckg_sz = 16);
     endfunction
     
     function void send_data_bus();
-        if (this.push == 1);
-            this.data_out_monitor = this.queue_in.pop_back();
+        this.data_out_bus = this.queue_in.pop_back();
         
     endfunction
     
