@@ -1,69 +1,83 @@
-`timescale 1ns / 1ps
+typedef enum {
+    lectura,
+    escritura,
+    reset,
+    broadcast} transaction;
+
+typedef enum {
+    retardo_promedio,
+    reporte} solicitud_sb;
+    
 
 
-class fifo #(parameter drvrs = 4, parameter pckg_sz = 16);
-    bit push;
-    bit pop;
-    bit pndng_bus;
-    bit pndng_monitor;
-    bit [pckg_sz-1:0] data_out_monitor;
-    bit [pckg_sz-1:0] data_out_bus;
-    bit [pckg_sz-1:0] queue_in [$];
-    bit [pckg_sz-1:0] queue_out [$];
-    bit [7:0] id;
-    
-    
-    function new (input int identification);
-        this.push               = 0;
-        this.pop                = 0;
-        this.pndng_bus          = 0;
-        this.pndng_monitor      = 0;
-        this.data_out_monitor   = 0;
-        this.data_out_bus       = 0;
-        this.id                 = identification;
+class bus_pckg #(parameter drvrs = 4, parameter pckg_sz = 16);
+    rand int retardo;
+    rand bit [pckg_sz-1:0] dato;
+    int tiempo;
+    rand transaction tipo;
+    int max_retardo;
+
+    constraint const_retardo {retardo < max_retardo; retardo>0;}
+
+    function new (int ret = 0, bit [pckg_sz-1:0] dto = 0, int tmp = 0, transaction tpo = escritura, int mx_rtrd = 10);
+	this.retardo = ret;
+	this.dato = dto;
+	this.tiempo = tmp;
+	this.tipo = tpo;
+        this.max_retardo = mx_rtrd;
     endfunction
-    
-    function void bus_pndng_upt ();
-        if (this.queue_in.size() != 0) 
-            this.pndng_bus = 1;
-        else
-            this.pndng_bus = 0;
+
+    function clean;
+	this.retardo = 0;
+        this.dato = 0;
+	this.tiempo = 0;
+	this.tipo = escritura;
     endfunction
-    
-    function void monitor_pndng_upt ();
-        if (this.queue_out.size() != 0) 
-            this.pndng_monitor = 1;
-        else
-            this.pndng_monitor = 0;
-    endfunction
-    
-    function void send_data_bus();
-        this.data_out_bus = this.queue_in.pop_back();
-        
-    endfunction
-    
-    function void receive_data_bus(input bit [pckg_sz-1:0] data_bus);
-        if (this.pop == 1);
-            this.queue_out.push_front(data_bus);
-        
-    endfunction
-    
-    function void print(input string tag);
-        $display("---------------------------");
+
+    function void print(input string tag = "");
+	$display("---------------------------");
         $display("[TIME %g]", $time);
         $display("%s", tag);
-        $display("push=%b", this.push);
-        $display("pop=%b", this.pop);
-        $display("pndng_bus=%b", this.pndng_bus);
-        $display("pndng_monitor=%b", this.pndng_monitor);
-        $display("data_out_bus=%h", this.data_out_bus);
-        $display("data_out_monitor=%h", this.data_out_monitor);
-        $display("queue_in=%p", this.queue_in);
-        $display("queue_out=%p", this.queue_out);
-        $display("id=%d", this.id);
+        $display("tipo=%s", this.tipo);
+        $display("retardo=%g", this.retardo);
+        $display("dato=0x%h", this.dato);
         $display("---------------------------");
-        
     endfunction
+
+endclass
+
+
+class sb_pckg #(parameter drvrs = 4, parameter pckg_sz = 16);
+    bit [pckg_sz-1:0] dato_enviado;
+    int tiempo_push;
+    int tiempo_pop;
+    bit completado;
+    bit reset;
+    int latencia;
+
+    function clean();
+	this.dato_enviado = 0;
+	this.tiempo_push = 0;
+	this.tiempo_pop = 0;
+	this.completado = 0;
+	this.latencia = 0;
+    endfunction
+
+    task calc_latencia;
+	this.latencia = this.tiempo_push - this.tiempo_pop;
+    endtask
+
+    function void print(input string tag = "");
+	$display("---------------------------");
+        $display("[TIME %g]", $time);
+        $display("%s", tag);
+        $display("Dato enviado=%h", this.dato_enviado);
+        $display("tiempo push=%g", this.tiempo_push);
+        $display("tiempo pop=%g", this.tiempo_pop);
+	$display("latencia=%g", this.latencia);
+        $display("---------------------------");
+    endfunction
+
 endclass
 
 
@@ -78,4 +92,7 @@ interface bus_if #(parameter bits = 1,parameter drvrs = 4, parameter pckg_sz = 1
     logic pop[bits-1:0][drvrs-1:0];
     logic [pckg_sz-1:0] D_pop[bits-1:0][drvrs-1:0];
     logic [pckg_sz-1:0] D_push[bits-1:0][drvrs-1:0];
-endinterface 
+endinterface
+
+typedef mailbox #(bus_pckg) bus_pckg_mbx;
+typedef mailbox #(sb_pckg) sb_pckg_mbx;
