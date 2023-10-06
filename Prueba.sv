@@ -9,16 +9,16 @@ module DUT_TB();
     parameter PERIOD = 2;
     parameter bits = 1;
     parameter drvrs = 4;
-    parameter pckg_sz = 16;
+    parameter pckg_sz = 8;
     parameter broadcast = {8{1'b1}} ;
 
     bit CLK_100MHZ;                                     //in
     
     drvr_mntr_hijo #(.bits(bits), .drvrs(drvrs), .pckg_sz(pckg_sz)) driver_UT [drvrs];
 
-    bus_pckg_mbx agnt_drvr_mbx;
-    bus_pckg_mbx drvr_chkr_mbx;
-    bus_pckg_mbx mntr_chkr_mbx;
+    bus_pckg_mbx #(.drvrs(drvrs), .pckg_sz(pckg_sz)) agnt_drvr_mbx;
+    bus_pckg_mbx #(.drvrs(drvrs), .pckg_sz(pckg_sz)) drvr_chkr_mbx;
+    bus_pckg_mbx #(.drvrs(drvrs), .pckg_sz(pckg_sz)) mntr_chkr_mbx;
 
     bus_pckg #(.drvrs(drvrs), .pckg_sz(pckg_sz)) trans [8];
 
@@ -54,10 +54,10 @@ module DUT_TB();
             #1;
         end
 	
-	trans[0] = new(.dto(16'h01AA));
-	trans[1] = new(.dto(16'h00BB));
-	trans[2] = new(.dto(16'h03CC));
-	trans[3] = new(.dto(16'h02DD));
+	trans[0] = new(.dto(16'h01));
+	trans[1] = new(.dto(16'h00));
+	trans[2] = new(.dto(16'h03));
+	trans[3] = new(.dto(16'h02));
 
 	agnt_drvr_mbx.put(trans[0]);
 	agnt_drvr_mbx.put(trans[1]);
@@ -73,10 +73,13 @@ module DUT_TB();
 		automatic int j = i;
 		begin
 		    driver_UT[j].run_drvr();
-		    driver_UT[j].run_mntr();
-
 		end
-
+	    join_none
+ 	    fork
+		automatic int j = i;
+		begin
+		    driver_UT[j].run_mntr();
+		end
 	    join_none
 	end
 

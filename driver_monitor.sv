@@ -24,15 +24,21 @@ class drvr_mntr #(parameter bits = 1, parameter drvrs = 4, parameter pckg_sz = 1
         this.id = identificador;
     endfunction
   
-    task update ();
+    task update_drvr();
 	forever begin
-	    //$display("[DEBUG] Actualizando ...");
 	    @(negedge vif.clk);
 	    pop = vif.pop[0][id];
-	    push = vif.push[0][id];
 	    vif.pndng[0][id] = pndng_bus;
         end
     endtask
+
+    task update_mntr();
+	forever begin
+	    @(negedge vif.clk);
+	    push = vif.push[0][id];
+        end
+    endtask
+ 
   
     task send_data_bus();
 	forever begin
@@ -42,24 +48,29 @@ class drvr_mntr #(parameter bits = 1, parameter drvrs = 4, parameter pckg_sz = 1
     	        queue_in.pop_back();
 	    end
 
-	    if (push) begin
-	        queue_out.push_front(vif.D_push[0][id]);
-	    end
-	    
 	    if (queue_in.size() != 0) 
                 pndng_bus = 1;
             else
                 pndng_bus = 0;
+	end
+    endtask
+
+    task receive_data_bus();
+	forever begin
+	    @(posedge vif.clk);
+	    if (push) begin
+	        queue_out.push_front(vif.D_push[0][id]);
+	    end
       
 	    if (queue_out.size() != 0) begin 
                 pndng_mntr = 1;
 	    end
             else
                 pndng_mntr = 0;
-
-
 	end
-    endtask
+    endtask     
+
+
 
     
 
@@ -90,9 +101,9 @@ class drvr_mntr_hijo #(parameter bits = 1, parameter drvrs = 4, parameter pckg_s
     bus_pckg #(.drvrs(drvrs), .pckg_sz(pckg_sz)) transaccion_mntr;
 
 
-    bus_pckg_mbx agnt_drvr_mbx;
-    bus_pckg_mbx drvr_chkr_mbx;
-    bus_pckg_mbx mntr_chkr_mbx;
+    bus_pckg_mbx #(.drvrs(drvrs), .pckg_sz(pckg_sz)) agnt_drvr_mbx;
+    bus_pckg_mbx #(.drvrs(drvrs), .pckg_sz(pckg_sz)) drvr_chkr_mbx;
+    bus_pckg_mbx #(.drvrs(drvrs), .pckg_sz(pckg_sz)) mntr_chkr_mbx;
 
 
 
@@ -115,7 +126,7 @@ class drvr_mntr_hijo #(parameter bits = 1, parameter drvrs = 4, parameter pckg_s
 	$display("[ID] %d", id);
         $display("[%g] El Driver fue inicializado", $time);
 	fork
-            dm_hijo.update();
+            dm_hijo.update_drvr();
 	    dm_hijo.send_data_bus();
 	join_none
         @(posedge dm_hijo.vif.clk);
@@ -143,8 +154,8 @@ class drvr_mntr_hijo #(parameter bits = 1, parameter drvrs = 4, parameter pckg_s
         $display("[%g] El Monitor fue inicializado", $time);
 	
 	fork
-            dm_hijo.update();
-	    dm_hijo.send_data_bus();
+            dm_hijo.update_mntr();
+	    dm_hijo.receive_data_bus();
 	join_none
         
 	forever begin

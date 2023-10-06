@@ -94,5 +94,5 @@ interface bus_if #(parameter bits = 1,parameter drvrs = 4, parameter pckg_sz = 1
     logic [pckg_sz-1:0] D_push[bits-1:0][drvrs-1:0];
 endinterface
 
-typedef mailbox #(bus_pckg) bus_pckg_mbx;
-typedef mailbox #(sb_pckg) sb_pckg_mbx;
+typedef mailbox #(bus_pckg #(.drvrs(4), .pckg_sz(16))) bus_pckg_mbx;
+typedef mailbox #(sb_pckg #(.drvrs(4), .pckg_sz(16))) sb_pckg_mbx;
