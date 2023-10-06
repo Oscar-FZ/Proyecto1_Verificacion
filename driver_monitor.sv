@@ -101,7 +101,7 @@ class drvr_mntr_hijo #(parameter bits = 1, parameter drvrs = 4, parameter pckg_s
     bus_pckg #(.drvrs(drvrs), .pckg_sz(pckg_sz)) transaccion_mntr;
 
 
-    bus_pckg_mbx #(.drvrs(drvrs), .pckg_sz(pckg_sz)) agnt_drvr_mbx;
+    bus_pckg_mbx #(.drvrs(drvrs), .pckg_sz(pckg_sz)) agnt_drvr_mbx[drvrs];
     bus_pckg_mbx #(.drvrs(drvrs), .pckg_sz(pckg_sz)) drvr_chkr_mbx;
     bus_pckg_mbx #(.drvrs(drvrs), .pckg_sz(pckg_sz)) mntr_chkr_mbx;
 
@@ -117,7 +117,10 @@ class drvr_mntr_hijo #(parameter bits = 1, parameter drvrs = 4, parameter pckg_s
 	transaccion = new();
 	transaccion_mntr = new(.tpo(lectura));
 
-	agnt_drvr_mbx = new();
+	for (int i = 0; i<drvrs; i++) begin
+		agnt_drvr_mbx[i] = new();
+	end
+
 	drvr_chkr_mbx = new();
 	mntr_chkr_mbx = new();
     endfunction
@@ -134,7 +137,7 @@ class drvr_mntr_hijo #(parameter bits = 1, parameter drvrs = 4, parameter pckg_s
             dm_hijo.vif.reset = 0;
 	    espera = 0;
             
-	    agnt_drvr_mbx.get(transaccion);
+	    agnt_drvr_mbx[id].get(transaccion);
 	    while(espera <= transaccion.retardo) begin
 	        @(posedge dm_hijo.vif.clk);
 		espera = espera + 1;

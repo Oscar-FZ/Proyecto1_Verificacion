@@ -1,37 +1,44 @@
 typedef enum {
     lectura,
     escritura,
-    reset,
-    broadcast} transaction;
+    reset} transaction;
 
 typedef enum {
     retardo_promedio,
     reporte} solicitud_sb;
+
+typedef enum {
+    aleatorio,
+    broadcast,
+    retardos,
+    especifico} instruccion;
     
 
 
 class bus_pckg #(parameter drvrs = 4, parameter pckg_sz = 16);
     rand int retardo;
-    rand bit [pckg_sz-1:0] dato;
+    bit [pckg_sz-1:0] dato;
     int tiempo;
-    rand transaction tipo;
+    transaction tipo;
     int max_retardo;
+    rand bit [drvrs-1:0] dispositivo;
+    rand bit [7:0] direccion;
+    rand bit [pckg_sz-9:0] info;
 
     constraint const_retardo {retardo < max_retardo; retardo>0;}
+    constraint const_direccion {direccion < drvrs; direccion >=0; direccion != dispositivo;}
+    constraint const_dispositivo {dispositivo < drvrs; dispositivo >= 0;}
 
-    function new (int ret = 0, bit [pckg_sz-1:0] dto = 0, int tmp = 0, transaction tpo = escritura, int mx_rtrd = 10);
+    function new (int ret = 0, bit [pckg_sz-1:0] dto = 0, int tmp = 0, transaction tpo = escritura, int mx_rtrd = 10, bit [drvrs-1:0] dsp = 0, bit [7:0] dir = 0, bit [pckg_sz-9:0] inf = 0);
 	this.retardo = ret;
 	this.dato = dto;
 	this.tiempo = tmp;
 	this.tipo = tpo;
         this.max_retardo = mx_rtrd;
-    endfunction
+	this.dispositivo = dsp;
+	this.direccion = dir;
+	this.info = inf;
 
-    function clean;
-	this.retardo = 0;
-        this.dato = 0;
-	this.tiempo = 0;
-	this.tipo = escritura;
     endfunction
 
     function void print(input string tag = "");
@@ -40,7 +47,12 @@ class bus_pckg #(parameter drvrs = 4, parameter pckg_sz = 16);
         $display("%s", tag);
         $display("tipo=%s", this.tipo);
         $display("retardo=%g", this.retardo);
-        $display("dato=0x%h", this.dato);
+	$display("direccion=0x%h", this.direccion);
+	$display("dispositivo=0x%h",this.dispositivo);
+	$display("info=0x%h", this.info);
+ 	$display("dato=0x%h", this.dato);
+
+
         $display("---------------------------");
     endfunction
 
@@ -96,3 +108,4 @@ endinterface
 
 typedef mailbox #(bus_pckg #(.drvrs(4), .pckg_sz(16))) bus_pckg_mbx;
 typedef mailbox #(sb_pckg #(.drvrs(4), .pckg_sz(16))) sb_pckg_mbx;
+typedef mailbox #(instruccion) instr_pckg_mbx;

@@ -4,6 +4,7 @@
 `include "transacttions.sv"
 `include "driver_monitor.sv"
 `include "checker.sv"
+`include "agent.sv"
 
 module DUT_TB();
     parameter WIDTH = 16;
@@ -18,13 +19,16 @@ module DUT_TB();
     //drvr_mntr_hijo #(.bits(bits), .drvrs(drvrs), .pckg_sz(pckg_sz)) driver_UT [drvrs];
     strt_drvr_mntr #(.bits(bits), .drvrs(drvrs), .pckg_sz(pckg_sz)) driver_monitor_inst;
 
-    checker_p #(.drvrs(drvrs), .pckg_sz(pckg_sz)) mi_chkr; 
+    checker_p #(.drvrs(drvrs), .pckg_sz(pckg_sz)) mi_chkr;
+    agent #(.bits(bits), .drvrs(drvrs), .pckg_sz(pckg_sz)) agent_inst;
 
-    bus_pckg_mbx #(.drvrs(drvrs), .pckg_sz(pckg_sz)) agnt_drvr_mbx;
+    bus_pckg_mbx #(.drvrs(drvrs), .pckg_sz(pckg_sz)) agnt_drvr_mbx[drvrs];
     bus_pckg_mbx #(.drvrs(drvrs), .pckg_sz(pckg_sz)) drvr_chkr_mbx;
     bus_pckg_mbx #(.drvrs(drvrs), .pckg_sz(pckg_sz)) mntr_chkr_mbx;
+    instr_pckg_mbx test_agnt_mbx;
+    sb_pckg_mbx #(.drvrs(drvrs), .pckg_sz(pckg_sz)) chkr_sb_mbx;
 
-    sb_pckg_mbx #(.drvrs(drvrs), .pckg_sz(pckg_sz)) chkr_sb_mbx; 
+    instruccion tipo; 
 
     bus_pckg #(.drvrs(drvrs), .pckg_sz(pckg_sz)) trans [8];
 
@@ -45,20 +49,27 @@ module DUT_TB();
     initial begin
       	CLK_100MHZ = 0;
       	
-	agnt_drvr_mbx = new();
+	for(int i = 0; i<drvrs; i++) begin
+	    agnt_drvr_mbx[i] = new();
+	end
+
+	//agnt_drvr_mbx = new();
 	drvr_chkr_mbx = new();
 	mntr_chkr_mbx = new();
 	chkr_sb_mbx = new();
+	test_agnt_mbx = new();
 
 
         $display("INICIO");
 	mi_chkr = new();
+	agent_inst = new();
 	driver_monitor_inst = new();
 
         for (int i = 0; i<drvrs; i++) begin
             $display("[%d]", i);
 	    driver_monitor_inst.strt_dm[i].dm_hijo.vif = _if;
-	    driver_monitor_inst.strt_dm[i].agnt_drvr_mbx = agnt_drvr_mbx;
+	    driver_monitor_inst.strt_dm[i].agnt_drvr_mbx[i] = agnt_drvr_mbx[i];
+	    agent_inst.agnt_drvr_mbx[i] = agnt_drvr_mbx[i];
 	    driver_monitor_inst.strt_dm[i].drvr_chkr_mbx = drvr_chkr_mbx;
 	    driver_monitor_inst.strt_dm[i].mntr_chkr_mbx = mntr_chkr_mbx;
             #1;
@@ -66,17 +77,13 @@ module DUT_TB();
 	mi_chkr.drvr_chkr_mbx = drvr_chkr_mbx;
 	mi_chkr.mntr_chkr_mbx = mntr_chkr_mbx;
 	mi_chkr.chkr_sb_mbx = chkr_sb_mbx;
+	agent_inst.test_agnt_mbx = test_agnt_mbx;
+
+	agent_inst.num_trans = 10;
+	agent_inst.max_retardo_agnt = 20;
+	tipo = aleatorio;
+	test_agnt_mbx.put(tipo);
 	
-	trans[0] = new(.dto(16'h01));
-	trans[1] = new(.dto(16'h00));
-	trans[2] = new(.dto(16'h03));
-	trans[3] = new(.dto(16'h02));
-
-	agnt_drvr_mbx.put(trans[0]);
-	agnt_drvr_mbx.put(trans[1]);
-	agnt_drvr_mbx.put(trans[2]);
-	agnt_drvr_mbx.put(trans[3]);
-
 	_if.reset = 1;
 	#1;
 	_if.reset = 0;	
@@ -87,6 +94,7 @@ module DUT_TB();
 	    driver_monitor_inst.start_monitor();
 	    mi_chkr.update();
 	    mi_chkr.check();
+	    agent_inst.run();
 	join_none
 
 
