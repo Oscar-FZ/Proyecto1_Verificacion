@@ -144,7 +144,8 @@ class drvr_mntr_hijo #(parameter bits = 1, parameter drvrs = 4, parameter pckg_s
                 $display("[ESCRITURA]");
 		transaccion.tiempo = $time;
                 dm_hijo.queue_in.push_front(transaccion.dato);
-		transaccion.print("[DEBUG] Dato enviado");
+		//transaccion.print("[DEBUG] Dato enviado");
+		drvr_chkr_mbx.put(transaccion);
             end
         end
     endtask
@@ -166,10 +167,43 @@ class drvr_mntr_hijo #(parameter bits = 1, parameter drvrs = 4, parameter pckg_s
 		transaccion_mntr.tiempo = $time;
 		transaccion_mntr.dato = dm_hijo.queue_out.pop_back();
 		mntr_chkr_mbx.put(transaccion_mntr);
-		transaccion.print("[DEBUG] Dato recivido");
+		//transaccion.print("[DEBUG] Dato recivido");
 	    end
         end
     endtask
+endclass
+
+class strt_drvr_mntr #(parameter bits = 1, parameter drvrs = 4, parameter pckg_sz = 16);
+	drvr_mntr_hijo #(.bits(bits), .drvrs(drvrs), .pckg_sz(pckg_sz)) strt_dm [drvrs];
+	
+	function new();
+		for(int i = 0; i < drvrs; i++) begin
+			strt_dm[i] = new(i);
+		end
+	endfunction
+
+	task start_driver();
+		for (int i = 0; i < drvrs; i++)begin
+			fork
+				automatic int j=i;
+				begin
+					strt_dm[j].run_drvr();
+				end
+			join_none
+		end
+	endtask
+
+	task start_monitor();
+		for (int i = 0; i < drvrs; i++)begin
+			fork
+				automatic int j=i;
+				begin
+					strt_dm[j].run_mntr();
+				end
+			join_none
+		end
+	endtask
+
 endclass
 
 

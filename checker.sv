@@ -1,24 +1,32 @@
 class checker_p  #(parameter drvrs =4, parameter pckg_sz = 16);
     bus_pckg #(.drvrs(drvrs), .pckg_sz(pckg_sz)) transaccion;
+ 
     bus_pckg #(.drvrs(drvrs), .pckg_sz(pckg_sz)) auxiliar;
     sb_pckg #(.drvrs(drvrs), .pckg_sz(pckg_sz)) to_sb;
 
-    bus_pckg emul_fifo[$];
-    bus_pckg_mbx drvr_chkr_mbx;
-    bus_pckg_mbx mntr_chkr_mbx;
-    sb_pckg_mbx chkr_sb_mbx;
+    bus_pckg #(.drvrs(drvrs), .pckg_sz(pckg_sz)) emul_fifo[$];
+    bus_pckg_mbx #(.drvrs(drvrs), .pckg_sz(pckg_sz)) drvr_chkr_mbx;
+    bus_pckg_mbx #(.drvrs(drvrs), .pckg_sz(pckg_sz)) mntr_chkr_mbx;
+    sb_pckg_mbx #(.drvrs(drvrs), .pckg_sz(pckg_sz)) chkr_sb_mbx;
     int contador_auxiliar;
 
     function new();
-	this.emul_fifo = {};
-	this.contador_auxiliar = 0;
-	this.to_sb = new();
+	emul_fifo = {};
+	contador_auxiliar = 0;
+	to_sb = new();
+	transaccion = new();
+
+	drvr_chkr_mbx = new();
+	mntr_chkr_mbx = new();
+	chkr_sb_mbx = new();
     endfunction
 
     task update();
 	$display("[%g] El Checker se esta actualizando", $time);
 	forever begin
+	    $display("WOAH");
 	    drvr_chkr_mbx.get(transaccion);
+	    $display("Transaccion recibida");
 	    emul_fifo.push_front(transaccion);
 	end
     endtask
@@ -34,14 +42,12 @@ class checker_p  #(parameter drvrs =4, parameter pckg_sz = 16);
 		    to_sb.tiempo_pop = emul_fifo[i].tiempo;
 		    to_sb.completado = 1;
 		    to_sb.calc_latencia();
-		    to_sb.print("[DEBUG]");
+		    to_sb.print("[CHECKER]");
 		    chkr_sb_mbx.put(to_sb);
 	        end
 	    end
 	end
     endtask
-
-
 endclass
 
 

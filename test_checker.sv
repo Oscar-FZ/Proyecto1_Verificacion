@@ -10,9 +10,9 @@ module checker_DUT();
 	
 	checker_p #(.drvrs(drvrs), .pckg_sz(pckg_sz)) mi_chkr;
 
-	bus_pckg_mbx drvr_chkr_mbx;
-	bus_pckg_mbx mntr_chkr_mbx;
-	sb_pckg_mbx chkr_sb_mbx;
+	bus_pckg_mbx #(.drvrs(drvrs), .pckg_sz(pckg_sz)) drvr_chkr_mbx;
+	bus_pckg_mbx #(.drvrs(drvrs), .pckg_sz(pckg_sz)) mntr_chkr_mbx;
+	sb_pckg_mbx #(.drvrs(drvrs), .pckg_sz(pckg_sz)) chkr_sb_mbx;
 
 
 //	drvr_chkr_mbx = new();	
@@ -45,7 +45,6 @@ module checker_DUT();
 
 
 		trans[0] = new(.dto(16'h00_FF), .tmp(5));
-		trans[0].print("[DEBUG 0]");
 		trans[1] = new(.dto(16'h01_AB), .tmp(10));	
 		trans[2] = new(.dto(16'h02_CC), .tmp(15));
 		trans[3] = new(.dto(16'h00_DA), .tmp(20));
