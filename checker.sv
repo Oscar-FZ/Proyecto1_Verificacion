@@ -12,6 +12,7 @@ class checker_p  #(parameter drvrs =4, parameter pckg_sz = 16);
     function new();
 	this.emul_fifo = {};
 	this.contador_auxiliar = 0;
+	this.to_sb = new();
     endfunction
 
     task update();
@@ -28,9 +29,13 @@ class checker_p  #(parameter drvrs =4, parameter pckg_sz = 16);
 	    mntr_chkr_mbx.get(transaccion);
 	    for (int i = 0; i < emul_fifo.size(); i++) begin
 	        if (emul_fifo[i].dato == transaccion.dato) begin
-		    $display("COMPLETADA!!");
-		    transaccion.print("[MONITOR]");
-		    emul_fifo[i].print("[DRIVER]");
+		    to_sb.dato_enviado = emul_fifo[i].dato;
+		    to_sb.tiempo_push = transaccion.tiempo;
+		    to_sb.tiempo_pop = emul_fifo[i].tiempo;
+		    to_sb.completado = 1;
+		    to_sb.calc_latencia();
+		    to_sb.print("[DEBUG]");
+		    chkr_sb_mbx.put(to_sb);
 	        end
 	    end
 	end

@@ -1,4 +1,5 @@
 `timescale 1ns / 1ps
+`default_nettype none
 `include "Library.sv"
 `include "transacttions.sv"
 `include "driver_monitor.sv"
@@ -8,7 +9,7 @@ module DUT_TB();
     parameter PERIOD = 2;
     parameter bits = 1;
     parameter drvrs = 4;
-    parameter pckg_sz = 8;
+    parameter pckg_sz = 16;
     parameter broadcast = {8{1'b1}} ;
 
     bit CLK_100MHZ;                                     //in
@@ -19,7 +20,7 @@ module DUT_TB();
     bus_pckg_mbx drvr_chkr_mbx;
     bus_pckg_mbx mntr_chkr_mbx;
 
-    bus_pckg #(.drvrs(drvrs), .pckg_sz(pckg_sz)) trans;
+    bus_pckg #(.drvrs(drvrs), .pckg_sz(pckg_sz)) trans [8];
 
     bus_if #(.bits(bits), .drvrs(drvrs), .pckg_sz(pckg_sz)) _if (.clk(CLK_100MHZ));
     always #(PERIOD/2) CLK_100MHZ=~CLK_100MHZ;
@@ -46,15 +47,23 @@ module DUT_TB();
         for (int i = 0; i<drvrs; i++) begin
             $display("[%d]", i);
             driver_UT[i] =new(i);
-	    driver_UT[i].vif_hijo = _if;
+	    driver_UT[i].dm_hijo.vif = _if;
 	    driver_UT[i].agnt_drvr_mbx = agnt_drvr_mbx;
 	    driver_UT[i].drvr_chkr_mbx = drvr_chkr_mbx;
 	    driver_UT[i].mntr_chkr_mbx = mntr_chkr_mbx;
             #1;
         end
 	
-	trans = new(.dto(16'h00AA));
-	agnt_drvr_mbx.put(trans);
+	trans[0] = new(.dto(16'h01AA));
+	trans[1] = new(.dto(16'h00BB));
+	trans[2] = new(.dto(16'h03CC));
+	trans[3] = new(.dto(16'h02DD));
+
+	agnt_drvr_mbx.put(trans[0]);
+	agnt_drvr_mbx.put(trans[1]);
+	agnt_drvr_mbx.put(trans[2]);
+	agnt_drvr_mbx.put(trans[3]);
+
 	_if.reset = 1;
 	#1;
 	_if.reset = 0;	
@@ -63,7 +72,9 @@ module DUT_TB();
 	    fork
 		automatic int j = i;
 		begin
-		    driver_UT[j].run();
+		    driver_UT[j].run_drvr();
+		    driver_UT[j].run_mntr();
+
 		end
 
 	    join_none

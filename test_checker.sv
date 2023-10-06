@@ -12,6 +12,7 @@ module checker_DUT();
 
 	bus_pckg_mbx drvr_chkr_mbx;
 	bus_pckg_mbx mntr_chkr_mbx;
+	sb_pckg_mbx chkr_sb_mbx;
 
 
 //	drvr_chkr_mbx = new();	
@@ -36,9 +37,11 @@ module checker_DUT();
 
 		drvr_chkr_mbx = new();	
 		mntr_chkr_mbx = new();
+		chkr_sb_mbx = new();
 		mi_chkr = new();
 		mi_chkr.drvr_chkr_mbx = drvr_chkr_mbx;
 		mi_chkr.mntr_chkr_mbx = mntr_chkr_mbx;
+		mi_chkr.chkr_sb_mbx = chkr_sb_mbx;
 
 
 		trans[0] = new(.dto(16'h00_FF), .tmp(5));
@@ -70,7 +73,7 @@ module checker_DUT();
 		
 		
 		fork
-			mi_chkr.run();
+			mi_chkr.update();
 			mi_chkr.check();
 		join_none
 

@@ -24,19 +24,10 @@ class drvr_mntr #(parameter bits = 1, parameter drvrs = 4, parameter pckg_sz = 1
         this.id = identificador;
     endfunction
   
-    task pndng_upt ();
+    task update ();
 	forever begin
+	    //$display("[DEBUG] Actualizando ...");
 	    @(negedge vif.clk);
-            if (queue_in.size() != 0) 
-                pndng_bus = 1;
-            else
-                pndng_bus = 0;
-      
-      	    if (queue_out.size() != 0) 
-                pndng_mntr = 1;
-            else
-                pndng_mntr = 0;
-	    
 	    pop = vif.pop[0][id];
 	    push = vif.push[0][id];
 	    vif.pndng[0][id] = pndng_bus;
@@ -46,10 +37,27 @@ class drvr_mntr #(parameter bits = 1, parameter drvrs = 4, parameter pckg_sz = 1
     task send_data_bus();
 	forever begin
 	    @(posedge vif.clk);
+	    vif.D_pop[0][id] = queue_in[$];
 	    if (pop) begin
-    	        data_bus_in = queue_in.pop_back();
-    	    	vif.D_pop[0][id] = data_bus_in;
-	    end		
+    	        queue_in.pop_back();
+	    end
+
+	    if (push) begin
+	        queue_out.push_front(vif.D_push[0][id]);
+	    end
+	    
+	    if (queue_in.size() != 0) 
+                pndng_bus = 1;
+            else
+                pndng_bus = 0;
+      
+	    if (queue_out.size() != 0) begin 
+                pndng_mntr = 1;
+	    end
+            else
+                pndng_mntr = 0;
+
+
 	end
     endtask
 
@@ -76,70 +84,81 @@ endclass
     
 class drvr_mntr_hijo #(parameter bits = 1, parameter drvrs = 4, parameter pckg_sz = 16);
     drvr_mntr #(.bits(bits), .drvrs(drvrs), .pckg_sz(pckg_sz)) dm_hijo;
-
-    bus_pckg_mbx agnt_drvr_mbx;
-    //bus_pckg_mbx drvr_chkr_mbx;
-    //bus_pckg_mbx mntr_chkr_mbx;
+    //virtual bus_if #(.bits(bits), .drvrs(drvrs), .pckg_sz(pckg_sz)) vif_hijo;
 
     bus_pckg #(.drvrs(drvrs), .pckg_sz(pckg_sz)) transaccion;
+    bus_pckg #(.drvrs(drvrs), .pckg_sz(pckg_sz)) transaccion_mntr;
+
+
+    bus_pckg_mbx agnt_drvr_mbx;
+    bus_pckg_mbx drvr_chkr_mbx;
+    bus_pckg_mbx mntr_chkr_mbx;
+
 
 
     int espera;
     int id;
-    drvr_mntr #(.bits(bits), .drvrs(drvrs), .pckg_sz(pckg_sz)) dm_hijo = new(0);
-    virtual bus_if #(.bits(bits), .drvrs(drvrs), .pckg_sz(pckg_sz)) vif_hijo;
     
     function new (input int identification);
       	dm_hijo = new(identification);
-      	dm_hijo.vif = vif_hijo;
+      	//dm_hijo.vif = vif_hijo;
         id = identification;
-	agnt_drvr_mbx = new();
-	//drvr_chkr_mbx = new();
-	//mntr_chkr_mbx = new();
 	transaccion = new();
+	transaccion_mntr = new(.tpo(lectura));
+
+	agnt_drvr_mbx = new();
+	drvr_chkr_mbx = new();
+	mntr_chkr_mbx = new();
     endfunction
     
-    task run();
-        $display("[%g] El Driver/Monitor fue inicializado", $time);
+    task run_drvr();
+	$display("[ID] %d", id);
+        $display("[%g] El Driver fue inicializado", $time);
 	fork
-            dm_hijo.pndng_upt();
+            dm_hijo.update();
 	    dm_hijo.send_data_bus();
 	join_none
-        //@(posedge vif_hijo.clk);
-        //vif_hijo.reset = 1;
-        @(posedge vif_hijo.clk);
+        @(posedge dm_hijo.vif.clk);
         forever begin
-            vif_hijo.reset = 0;
-            vif_hijo.pndng[0][id] = 0;
-            vif_hijo.D_pop[0][id] = 0;
+            dm_hijo.vif.reset = 0;
+	    espera = 0;
             
 	    agnt_drvr_mbx.get(transaccion);
+	    while(espera <= transaccion.retardo) begin
+	        @(posedge dm_hijo.vif.clk);
+		espera = espera + 1;
+	    end
+                
+            if (transaccion.tipo == escritura) begin
+                $display("[ESCRITURA]");
+		transaccion.tiempo = $time;
+                dm_hijo.queue_in.push_front(transaccion.dato);
+		transaccion.print("[DEBUG] Dato enviado");
+            end
+        end
+    endtask
 
-            case(transaccion.tipo)
-                lectura: begin
-                    $display("[LECTURA]");
-                end
-                
-                escritura: begin
-                    $display("[ESCRITURA]");
-                    dm_hijo.queue_in.push_front(transaccion.dato);
-                  
-                end
-                
-                reset: begin
-                    $display("[RECET]");
-                end
-                
-                broadcast: begin
-                    $display("[BROADCAST]");
-                end
-                
-                default: begin
-                    $display("[DEFAULT]");
-                    $finish;
-                end
-            endcase
+    task run_mntr();
+	$display("[ID] %d", id);
+        $display("[%g] El Monitor fue inicializado", $time);
+	
+	fork
+            dm_hijo.update();
+	    dm_hijo.send_data_bus();
+	join_none
+        
+	forever begin
+            dm_hijo.vif.reset = 0;
+            @(posedge dm_hijo.vif.clk);    
+	    if (dm_hijo.pndng_mntr) begin
+	    	$display("[LECTURA]");
+		transaccion_mntr.tiempo = $time;
+		transaccion_mntr.dato = dm_hijo.queue_out.pop_back();
+		mntr_chkr_mbx.put(transaccion_mntr);
+		transaccion.print("[DEBUG] Dato recivido");
+	    end
         end
     endtask
 endclass
+
 
