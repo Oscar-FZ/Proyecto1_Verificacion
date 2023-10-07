@@ -1,3 +1,31 @@
 ;Dato enviado; Tiempo Push; Tiempo Pop; Completado; Latencia; Dispositivo Receptor
-dispositivo emisor 0x02; 0x01ff; 24; 16; 1; 8; 0x01
-dispositivo emisor 0x01; 0x00ab; 20; 12; 1; 8; 0x00
+[          1] dispositivo emisor 0x02; 0x0343; 65; 13; 1; 52; 0x03
+[          2] dispositivo emisor 0x03; 0x02a6; 105; 13; 1; 92; 0x02
+[          3] dispositivo emisor 0x03; 0x02a6; 105; 13; 1; 92; 0x02
+[          4] dispositivo emisor 0x00; 0x01e1; 145; 41; 1; 104; 0x01
+[          5] dispositivo emisor 0x01; 0x0281; 185; 27; 1; 158; 0x02
+[          6] dispositivo emisor 0x01; 0x0281; 185; 27; 1; 158; 0x02
+[          7] dispositivo emisor 0x02; 0x01aa; 225; 29; 1; 196; 0x01
+[          8] dispositivo emisor 0x03; 0x01fc; 265; 31; 1; 234; 0x01
+[          9] dispositivo emisor 0x00; 0x03cd; 305; 75; 1; 230; 0x03
+[         10] dispositivo emisor 0x01; 0x02c2; 345; 35; 1; 310; 0x02
+[         11] dispositivo emisor 0x01; 0x02c2; 345; 35; 1; 310; 0x02
+[         12] dispositivo emisor 0x02; 0x01b1; 385; 57; 1; 328; 0x01
+[         13] dispositivo emisor 0x03; 0x0224; 425; 71; 1; 354; 0x02
+[         14] dispositivo emisor 0x03; 0x0224; 425; 71; 1; 354; 0x02
+[         15] dispositivo emisor 0x01; 0x02a0; 505; 47; 1; 458; 0x02
+[         16] dispositivo emisor 0x01; 0x02a0; 505; 47; 1; 458; 0x02
+[         17] dispositivo emisor 0x02; 0x01b9; 545; 75; 1; 470; 0x01
+[         18] dispositivo emisor 0x03; 0x023d; 585; 99; 1; 486; 0x02
+[         19] dispositivo emisor 0x03; 0x023d; 585; 99; 1; 486; 0x02
+[         20] dispositivo emisor 0x00; 0x0385; 625; 121; 1; 504; 0x03
+[         21] dispositivo emisor 0x01; 0x000c; 665; 79; 1; 586; 0x00
+[         22] dispositivo emisor 0x02; 0x0087; 705; 87; 1; 618; 0x00
+[         23] dispositivo emisor 0x02; 0x0263; 745; 745; 1; 0; 0x02
+[         24] dispositivo emisor 0x02; 0x0263; 745; 745; 1; 0; 0x02
+[         25] dispositivo emisor 0x00; 0x0106; 785; 143; 1; 642; 0x01
+[         26] dispositivo emisor 0x01; 0x039a; 825; 97; 1; 728; 0x03
+[         27] dispositivo emisor 0x02; 0x00ad; 865; 125; 1; 740; 0x00
+[         28] dispositivo emisor 0x03; 0x0152; 905; 147; 1; 758; 0x01
+[         29] dispositivo emisor 0x02; 0x0276; 945; 945; 1; 0; 0x02
+[         30] dispositivo emisor 0x02; 0x0276; 945; 945; 1; 0; 0x02

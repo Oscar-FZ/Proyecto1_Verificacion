@@ -31,7 +31,7 @@ class agent #(parameter bits = 1, parameter drvrs = 4, parameter pckg_sz = 16);
 							transaccion.max_retardo = max_retardo_agnt;
 							transaccion.randomize();
 							transaccion.dato = {transaccion.direccion, transaccion.info};
-							transaccion.print("[AGENT]");
+							//transaccion.print("[AGENT]");
 							agnt_drvr_mbx[transaccion.dispositivo].put(transaccion);
 
 						end

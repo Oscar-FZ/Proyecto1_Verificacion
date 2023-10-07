@@ -144,11 +144,13 @@ class drvr_mntr_hijo #(parameter bits = 1, parameter drvrs = 4, parameter pckg_s
 	    end
                 
             if (transaccion.tipo == escritura) begin
-                $display("[ESCRITURA]");
 		transaccion.tiempo = $time;
+		transaccion.dispositivo = dm_hijo.id;
                 dm_hijo.queue_in.push_front(transaccion.dato);
 		//transaccion.print("[DEBUG] Dato enviado");
 		drvr_chkr_mbx.put(transaccion);
+		$display("[ESCRITURA]");
+
             end
         end
     endtask
@@ -166,10 +168,13 @@ class drvr_mntr_hijo #(parameter bits = 1, parameter drvrs = 4, parameter pckg_s
             dm_hijo.vif.reset = 0;
             @(posedge dm_hijo.vif.clk);    
 	    if (dm_hijo.pndng_mntr) begin
-	    	$display("[LECTURA]");
+		$display("[LECTURA] INICIO");
 		transaccion_mntr.tiempo = $time;
+		transaccion_mntr.dispositivo = dm_hijo.id;
 		transaccion_mntr.dato = dm_hijo.queue_out.pop_back();
 		mntr_chkr_mbx.put(transaccion_mntr);
+		$display("[LECTURA] FIN");
+
 		//transaccion.print("[DEBUG] Dato recivido");
 	    end
         end

@@ -5,31 +5,43 @@ class score_board #(parameter drvrs = 4, parameter pckg_sz = 16);
 
 	int num_trans;
 	int num_trans_aux;
-
+	int inicio;
+	int j;
 	int rprt_sb;
+
+	function new();
+	    chkr_sb_mbx = new();
+	    inicio = 1;
+	    num_trans_aux = 0;
+
+	endfunction
 
 	task run();
 		num_trans_aux = 0;
-		$display("[%g] El Score Board inicio", $time);
+		$display("[SCOREBOARD][%g] El Score Board inicio", $time);
 		forever begin
 			#1;
 			if (chkr_sb_mbx.num()>0) begin
+				$display("[SCOREBOARD] Transaccion recibida");
 				chkr_sb_mbx.get(trans_sb);
-				sb_aux.push_front(trans_sb);
+				//sb_aux.push_front(trans_sb);
 				num_trans_aux++;
+
+				$display("[SCOREBOARD] Imprimiendo Archivos");
+				if (inicio) begin
+					rprt_sb = $fopen("reporte_scoreboard.csv", "w");
+					$fwrite(rprt_sb, ";Dato enviado; Tiempo Push; Tiempo Pop; Completado; Latencia; Dispositivo Receptor\n");
+					$fclose(rprt_sb);
+					inicio = 0;
+				end
+				rprt_sb = $fopen("reporte_scoreboard.csv", "a");
+
+				$display("[SCOREBOARD] ESCRIBIENDO %d", num_trans_aux);
+				$fwrite(rprt_sb,"[%d] dispositivo emisor 0x%h; 0x%h; %g; %g; %b; %g; 0x%h\n",num_trans_aux ,trans_sb.dsp_env, trans_sb.dato_enviado, trans_sb.tiempo_push, trans_sb.tiempo_pop, trans_sb.completado, trans_sb.latencia, trans_sb.dsp_rec);
+				$fclose(rprt_sb);
 			end
 
-			if((num_trans_aux > num_trans) && (chkr_sb_mbx.num() == 0)) begin
-				$display("[SCOREBOARD] Imprimiendo Archivos");
-				rprt_sb = $fopen("reporte_scoreboard.csv", "w");
-				$fwrite(rprt_sb, ";Dato enviado; Tiempo Push; Tiempo Pop; Completado; Latencia; Dispositivo Receptor\n");
-				for (int i = 0;i<sb_aux.size(); i++) begin
-					$display("[DEBUG] %d", i);
-					$fwrite(rprt_sb,"dispositivo emisor 0x%h; 0x%h; %g; %g; %b; %g; 0x%h\n",sb_aux[i].dsp_env, sb_aux[i].dato_enviado, sb_aux[i].tiempo_push, sb_aux[i].tiempo_pop, sb_aux[i].completado, sb_aux[i].latencia, sb_aux[i].dsp_rec);
-				end
-				$fclose(rprt_sb);
-				break;
-			end
+			if (num_trans_aux == num_trans) break;
 		end
 	
 	endtask

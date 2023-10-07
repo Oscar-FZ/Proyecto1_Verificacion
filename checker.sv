@@ -11,42 +11,44 @@ class checker_p  #(parameter drvrs =4, parameter pckg_sz = 16);
     int contador_auxiliar;
 
     function new();
-	emul_fifo = {};
-	contador_auxiliar = 0;
-	to_sb = new();
-	transaccion = new();
+		emul_fifo = {};
+		contador_auxiliar = 0;
+		to_sb = new();
+		transaccion = new();
 
-	drvr_chkr_mbx = new();
-	mntr_chkr_mbx = new();
-	chkr_sb_mbx = new();
+		drvr_chkr_mbx = new();
+		mntr_chkr_mbx = new();
+		chkr_sb_mbx = new();
     endfunction
 
     task update();
-	$display("[%g] El Checker se esta actualizando", $time);
-	forever begin
-	    $display("WOAH");
-	    drvr_chkr_mbx.get(transaccion);
-	    $display("Transaccion recibida");
-	    emul_fifo.push_front(transaccion);
-	end
+		$display("[%g] El Checker se esta actualizando", $time);
+		forever begin
+	    	drvr_chkr_mbx.get(transaccion);
+	    	$display("[CHECKER] Transaccion recibida");
+	    	emul_fifo.push_front(transaccion);
+		end
     endtask
 
     task check();
-	$display("[%g] El Checker esta revisando", $time);
-	forever begin
-	    mntr_chkr_mbx.get(transaccion);
-	    for (int i = 0; i < emul_fifo.size(); i++) begin
-	        if (emul_fifo[i].dato == transaccion.dato) begin
-		    to_sb.dato_enviado = emul_fifo[i].dato;
-		    to_sb.tiempo_push = transaccion.tiempo;
-		    to_sb.tiempo_pop = emul_fifo[i].tiempo;
-		    to_sb.completado = 1;
-		    to_sb.calc_latencia();
-		    to_sb.print("[CHECKER]");
-		    chkr_sb_mbx.put(to_sb);
-	        end
-	    end
-	end
+		$display("[%g] El Checker esta revisando", $time);
+		forever begin
+	    	mntr_chkr_mbx.get(transaccion);
+	    	for (int i = 0; i < emul_fifo.size(); i++) begin
+	        	if (emul_fifo[i].dato == transaccion.dato) begin
+		    		to_sb.dato_enviado = emul_fifo[i].dato;
+		    		to_sb.tiempo_push = transaccion.tiempo;
+		    		to_sb.tiempo_pop = emul_fifo[i].tiempo;
+		    		to_sb.completado = 1;
+		    		to_sb.calc_latencia();
+		    		to_sb.dsp_env = emul_fifo[i].dispositivo;
+		    		to_sb.dsp_rec = transaccion.dispositivo;
+		    		//to_sb.print("[CHECKER]");
+		    		chkr_sb_mbx.put(to_sb);
+				$display("[CHECKER] FIN");
+	        	end
+	    	end
+		end
     endtask
 endclass
 

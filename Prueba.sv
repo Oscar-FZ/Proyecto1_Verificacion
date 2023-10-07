@@ -5,13 +5,14 @@
 `include "driver_monitor.sv"
 `include "checker.sv"
 `include "agent.sv"
+`include "score_board.sv"
 
 module DUT_TB();
     parameter WIDTH = 16;
     parameter PERIOD = 2;
     parameter bits = 1;
     parameter drvrs = 4;
-    parameter pckg_sz = 8;
+    parameter pckg_sz = 16;
     parameter broadcast = {8{1'b1}} ;
 
     bit CLK_100MHZ;                                     //in
@@ -21,6 +22,7 @@ module DUT_TB();
 
     checker_p #(.drvrs(drvrs), .pckg_sz(pckg_sz)) mi_chkr;
     agent #(.bits(bits), .drvrs(drvrs), .pckg_sz(pckg_sz)) agent_inst;
+    score_board #(.drvrs(drvrs), .pckg_sz(pckg_sz)) sb_inst;
 
     bus_pckg_mbx #(.drvrs(drvrs), .pckg_sz(pckg_sz)) agnt_drvr_mbx[drvrs];
     bus_pckg_mbx #(.drvrs(drvrs), .pckg_sz(pckg_sz)) drvr_chkr_mbx;
@@ -64,6 +66,7 @@ module DUT_TB();
 	mi_chkr = new();
 	agent_inst = new();
 	driver_monitor_inst = new();
+	sb_inst = new();
 
         for (int i = 0; i<drvrs; i++) begin
             $display("[%d]", i);
@@ -78,8 +81,10 @@ module DUT_TB();
 	mi_chkr.mntr_chkr_mbx = mntr_chkr_mbx;
 	mi_chkr.chkr_sb_mbx = chkr_sb_mbx;
 	agent_inst.test_agnt_mbx = test_agnt_mbx;
+	sb_inst.chkr_sb_mbx = chkr_sb_mbx; 
 
-	agent_inst.num_trans = 10;
+	agent_inst.num_trans = 30;
+	sb_inst.num_trans = agent_inst.num_trans;
 	agent_inst.max_retardo_agnt = 20;
 	tipo = aleatorio;
 	test_agnt_mbx.put(tipo);
@@ -95,6 +100,7 @@ module DUT_TB();
 	    mi_chkr.update();
 	    mi_chkr.check();
 	    agent_inst.run();
+	    sb_inst.run();
 	join_none
 
 
