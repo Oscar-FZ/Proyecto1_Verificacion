@@ -66,6 +66,8 @@ class sb_pckg #(parameter drvrs = 4, parameter pckg_sz = 16);
     bit completado;
     bit reset;
     int latencia;
+    bit [7:0] dsp_env;
+    bit [7:0] dsp_rec;
 
     function clean();
 	this.dato_enviado = 0;
